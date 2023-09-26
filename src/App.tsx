@@ -1,77 +1,92 @@
-import { Stage, Layer, Star, Text} from 'react-konva';
-import React from 'react'
+import {Stage, Layer,  Rect} from 'react-konva';
+import React, {useState} from 'react'
 
 
-function generateShapes() {
-    return [...Array(10)].map((_, i) => ({
-        id: i.toString(),
-        x: Math.random() * window.innerWidth,
-        y: Math.random() * window.innerHeight,
-        rotation: Math.random() * 180,
-        isDragging: false,
-    }));
-}
-
-const INITIAL_STATE = generateShapes();
 function App() {
-    const [stars, setStars] = React.useState(INITIAL_STATE);
+    const [selectedItem,setSelectedItem] = useState(0)
+    const [items,setItems] = useState([
+        { id:1, x:50, y:50 }, { id:2, x:150, y:50 }, { id:3, x:250, y:50 }])
+    function containerKeyDownHandler(e:any){
+        if(e.keyCode === 9){
+            // select the item
+            itemSelector(e);
+        }else{
+            // select the position
+            locationChangeHandlerOfItem(e);
+        }
+        e.preventDefault();
 
-    const handleDragStart = (e:any) => {
-        const id = e.target.id();
-        setStars(
-            stars.map((star) => {
-                return {
-                    ...star,
-                    isDragging: star.id === id,
-                };
-            })
-        );
-    };
-    const handleDragEnd = (e:any) => {
-        setStars(
-            stars.map((star) => {
-                return {
-                    ...star,
-                    isDragging: false,
-                };
-            })
-        );
-    };
+    }
 
+
+    function itemSelector(e:any){
+        setSelectedItem((prevState)=>((prevState % items?.length)+1))
+    }
+
+    function locationChangeHandlerOfItem(e:any){
+        const steps = 4;
+        if(!selectedItem) return;
+        const item = items.find((item)=>item?.id === selectedItem);
+        if(!item) return;
+        if (e.keyCode === 37) {
+            //move to left direction
+            item.x = item.x - steps;
+
+        } else if (e.keyCode === 38) {
+            // move to down direction
+            item.y = item.y - steps;
+
+        } else if (e.keyCode === 39) {
+            // move to right direction
+            item.x = item.x + steps;
+        } else if (e.keyCode === 40) {
+            // move to up direction;
+            item.y = item.y + steps;
+        } else {
+            return;
+        }
+
+        const newItems = items.map((i)=>{
+            if(i?.id === selectedItem){
+                return {
+                    ...i,
+                    x : item.x,
+                    y : item.y
+                }
+            }else{
+                return i;
+            }
+        });
+        setItems([...newItems]);
+    }
 
 
     return (
-        <Stage width={window.innerWidth} height={window.innerHeight}>
-            <Layer>
-                <Text text="Try to drag a star" />
-                {stars.map((star) => (
-                    <Star
-                        key={star.id}
-                        id={star.id}
-                        x={star.x}
-                        y={star.y}
-                        numPoints={6}
-                        innerRadius={20}
-                        outerRadius={40}
-                        fill="#89b717"
-                        opacity={0.8}
-                        draggable
-                        rotation={star.rotation}
-                        shadowColor="black"
-                        shadowBlur={10}
-                        shadowOpacity={0.6}
-                        shadowOffsetX={star.isDragging ? 10 : 5}
-                        shadowOffsetY={star.isDragging ? 10 : 5}
-                        scaleX={star.isDragging ? 1.2 : 1}
-                        scaleY={star.isDragging ? 1.2 : 1}
-                        onDragStart={handleDragStart}
-                        onDragEnd={handleDragEnd}
-                    />
-                ))}
-            </Layer>
-        </Stage>
+   <div
+       tabIndex={1}
+       onKeyDown={containerKeyDownHandler}
+   >
+       <Stage width={window.innerWidth} height={window.innerHeight}>
+           <Layer>
+               {
+                   items?.map((item, index)=>(
+                       <Rect
+                           key={index}
+                           height={50}
+                           width={80}
+                           x={item?.x}
+                           y={item?.y}
+                           fill={'red'}
+                           stroke={'green'}
+                           strokeWidth={selectedItem === item?.id ? 2:0}
+                       />
+                   ))
+               }
+           </Layer>
+       </Stage>
+   </div>
 
-  );
+    );
 }
 
 export default App;
